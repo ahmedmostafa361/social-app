@@ -1,4 +1,8 @@
 export interface ICacheProvider {
+    connect(): Promise<void>;
+
+    isReady(): boolean;
+
     get(key: string): Promise<string | null>;
 
     set(key: string, value: string, ttlSeconds?: number): Promise<void>;

@@ -30,6 +30,11 @@ export function rateLimit({
     message,
 }: RateLimitOptions): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        if (!cacheProvider.isReady()) {
+            next();
+            return;
+        }
+
         const key = `rate:${name}:${identity(req)}`;
         let count: number;
 

@@ -24,6 +24,7 @@ class LoginLockService {
     private readonly lockSeconds = toSeconds(AUTH_LIMITS.lockMinutes, "minutes");
 
     async getLockRemainingSeconds(userId: string): Promise<number> {
+        if (!cacheProvider.isReady()) return 0;
         try {
             const ttl = await cacheProvider.ttl(lockKey(userId));
             if (ttl === -1) {
@@ -39,6 +40,7 @@ class LoginLockService {
 
     async registerFailure(user: LockableUser): Promise<FailedLoginResult> {
         const userId = String(user._id);
+        if (!cacheProvider.isReady()) return { locked: false, attemptsLeft: AUTH_LIMITS.maxFailedLogins };
         try {
             const attempts = await cacheProvider.increment(failuresKey(userId));
             if (attempts === 1) {
@@ -68,6 +70,7 @@ class LoginLockService {
     }
 
     async clear(userId: string): Promise<void> {
+        if (!cacheProvider.isReady()) return;
         try {
             await cacheProvider.del(failuresKey(userId), lockKey(userId));
         } catch (error) {

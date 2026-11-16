@@ -1,6 +1,11 @@
+import dns from "node:dns";
 import mongoose from "mongoose";
 import { env } from "../config/env.js";
 import { logger } from "../../pkg/logger/logger.js";
+
+if (env.db.url.startsWith("mongodb+srv://")) {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+}
 
 mongoose.set("strictQuery", true);
 

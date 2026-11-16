@@ -30,6 +30,8 @@ const envSchema = z
         REDIS_HOST: z.string().trim().default("127.0.0.1"),
         REDIS_PORT: z.coerce.number().int().positive().default(6379),
         REDIS_PASSWORD: optionalString,
+        UPSTASH_REDIS_REST_URL: optionalString,
+        UPSTASH_REDIS_REST_TOKEN: optionalString,
 
         EMAIL_PROVIDER: z.enum(["nodemailer", "mailjet"]).default("nodemailer"),
         MAIL_HOST: z.string().trim().default("smtp.gmail.com"),
@@ -100,6 +102,8 @@ export const env = {
         host: parsed.REDIS_HOST,
         port: parsed.REDIS_PORT,
         password: parsed.REDIS_PASSWORD,
+        upstashUrl: parsed.UPSTASH_REDIS_REST_URL,
+        upstashToken: parsed.UPSTASH_REDIS_REST_TOKEN,
     },
 
     mail: {

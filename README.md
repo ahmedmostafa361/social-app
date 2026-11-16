@@ -12,7 +12,7 @@ npm run dev
 
 Production: `npm run build && npm start`.
 
-MongoDB and Redis must be running. If Redis is down, the app keeps working (rate limiting and login lockout are skipped with a warning).
+MongoDB must be running. For Redis, set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to use Upstash, or leave them empty to use a local Redis. If Redis is unavailable, the app keeps working (rate limiting and login lockout are skipped with a warning).
 
 ## Auth — `/api/auth`
 
