@@ -1,0 +1,48 @@
+import { z } from "zod";
+import { AppError } from "../errors/app.error.js";
+
+export const validate = <TSchema extends z.ZodType>(schema: TSchema, data: unknown): z.output<TSchema> => {
+    const result = schema.safeParse(data ?? {});
+
+    if (!result.success) {
+        const messages = result.error.issues.map((issue) =>
+            issue.path.length ? `${issue.path.join(".")}: ${issue.message}` : issue.message
+        );
+        throw new AppError(messages.join(", "), 400, { code: "VALIDATION_ERROR" });
+    }
+
+    return result.data;
+};
+
+export const objectIdSchema = (label = "id") =>
+    z.string().trim().regex(/^[0-9a-fA-F]{24}$/, `Invalid ${label}`);
+
+export const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Invalid email address"));
+
+export const passwordSchema = z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(64, "Password must be at most 64 characters")
+    .regex(/[a-z]/, "Password must contain a lowercase letter")
+    .regex(/[A-Z]/, "Password must contain an uppercase letter")
+    .regex(/[0-9]/, "Password must contain a number");
+
+export const otpCodeSchema = z.string().trim().regex(/^\d{6}$/, "Code must be 6 digits");
+
+export const userNameSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be at most 30 characters")
+    .regex(/^[a-z0-9._]+$/, "Username can only contain letters, numbers, dots and underscores");
+
+export const phoneNumberSchema = z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9]{8,15}$/, "Invalid phone number");
+
+export const paginationSchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+});

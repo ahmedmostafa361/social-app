@@ -1,5 +1,5 @@
 import { AbstractRepository } from "../../../lib/db/abstract.repository.js";
-import { IPost, Post } from "../model/post.model.js";
+import { Post, type IPost } from "../model/post.model.js";
 
 class PostRepository extends AbstractRepository<IPost> {
     constructor() {
@@ -7,5 +7,4 @@ class PostRepository extends AbstractRepository<IPost> {
     }
 }
 
-// singleton
-export default new PostRepository();
+export const postRepository = new PostRepository();
