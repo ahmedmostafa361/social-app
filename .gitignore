@@ -1,24 +1,19 @@
-# Dependencies
 node_modules/
 
-# Build output (TypeScript compiled JS files)
 dist/
 build/
 *.tsbuildinfo
 
-# Environment variables (contains DB URIs, secrets, API keys)
 .env
 .env.*
 !.env.example
 
-# Logs
 logs/
 *.log
 npm-debug.log*
 
-# JetBrains / WebStorm IDE files
 .idea/
+.vscode/
 
-# OS generated files
 .DS_Store
 Thumbs.db

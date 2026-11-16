@@ -1,11 +1,7 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import crypto from "node:crypto";
 
-export const generateToken = (
-    payload: string | object | Buffer,
-    secret: string,
-    expiresInSeconds: number
-): string => {
+export const generateToken = (payload: object, secret: string, expiresInSeconds: number): string => {
     return jwt.sign(payload, secret, {
         algorithm: "HS256",
         expiresIn: expiresInSeconds,
@@ -13,9 +9,13 @@ export const generateToken = (
 };
 
 export const verifyToken = <T extends JwtPayload = JwtPayload>(token: string, secret: string): T => {
-    return jwt.verify(token, secret, { algorithms: ["HS256"] }) as T;
+    const payload = jwt.verify(token, secret, { algorithms: ["HS256"] });
+    if (typeof payload === "string") {
+        throw new jwt.JsonWebTokenError("Unexpected token payload");
+    }
+    return payload as T;
 };
 
-export const generateRandomToken = (bytes: number = 48): string => {
+export const generateRandomToken = (bytes = 48): string => {
     return crypto.randomBytes(bytes).toString("base64url");
 };

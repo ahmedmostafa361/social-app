@@ -1,5 +1,5 @@
-import { Client } from "node-mailjet";
-import type{ MailProvider } from "./mail.interface.js";
+import mailjet from "node-mailjet";
+import type { MailProvider } from "./mail.interface.js";
 
 export interface IMailjetConfig {
     apiKey: string;
@@ -9,12 +9,12 @@ export interface IMailjetConfig {
 }
 
 export class MailjetProvider implements MailProvider {
-    private client: Client;
+    private readonly client: InstanceType<typeof mailjet.Client>;
     private readonly fromEmail: string;
     private readonly fromName: string;
 
     constructor(config: IMailjetConfig) {
-        this.client = new Client({
+        this.client = new mailjet.Client({
             apiKey: config.apiKey,
             apiSecret: config.apiSecret,
         });

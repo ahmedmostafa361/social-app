@@ -1,54 +1,58 @@
-import { Redis } from "ioredis";
+import { Redis, type RedisOptions } from "ioredis";
+import { logger } from "../logger/logger.js";
 import type { ICacheProvider } from "./cache.interface.js";
 
 export interface IRedisConfig {
     host: string;
     port: number;
-    password?: string;
+    password?: string | undefined;
 }
 
 export class RedisCacheProvider implements ICacheProvider {
-    private client: Redis;
+    private readonly client: Redis;
 
-    // setup config - general
     constructor(config: IRedisConfig) {
-        this.client = new Redis({
+        const options: RedisOptions = {
             host: config.host,
             port: config.port,
-            password: config.password,
             lazyConnect: true,
-            maxLoadingRetryTime: 3,
-        });
-        // this.client = new Redis(config.url);
+            enableOfflineQueue: false,
+            maxRetriesPerRequest: 1,
+            retryStrategy: (times) => Math.min(times * 500, 5000),
+        };
+        if (config.password) options.password = config.password;
 
-        this.client.on("error", (err: Error) =>
-            console.log("redis server error:", err.message)
-        );
-        this.client
-            .connect()
-            .catch((err: Error) =>
-                console.log("fail to connect to redis", err.message)
-            );
+        this.client = new Redis(options);
+
+        this.client.on("error", (error: Error) => logger.warn("Redis error", { error: error.message }));
+        this.client.on("ready", () => logger.info("Connected to Redis"));
     }
 
-    async set(key: string, value: string, ttl?: number): Promise<"OK"> {
-        if (ttl) {
-            return this.client.set(key, value, "EX", ttl);
+    async connect(): Promise<void> {
+        try {
+            await this.client.connect();
+        } catch (error) {
+            logger.warn("Failed to connect to Redis, continuing without cache", {
+                error: error instanceof Error ? error.message : String(error),
+            });
         }
-        return this.client.set(key, value);
-    }
-
-    async setIfNotExists(
-        key: string,
-        value: string,
-        ttl: number
-    ): Promise<boolean> {
-        const result = await this.client.set(key, value, "EX", ttl, "NX");
-        return result === "OK";
     }
 
     async get(key: string): Promise<string | null> {
         return this.client.get(key);
+    }
+
+    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+        if (ttlSeconds) {
+            await this.client.set(key, value, "EX", ttlSeconds);
+            return;
+        }
+        await this.client.set(key, value);
+    }
+
+    async setIfNotExists(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+        const result = await this.client.set(key, value, "EX", ttlSeconds, "NX");
+        return result === "OK";
     }
 
     async del(...keys: string[]): Promise<number> {
@@ -60,11 +64,20 @@ export class RedisCacheProvider implements ICacheProvider {
         return this.client.incr(key);
     }
 
-    async expire(key: string, ttl: number): Promise<number> {
-        return this.client.expire(key, ttl);
+    async expire(key: string, ttlSeconds: number): Promise<boolean> {
+        return (await this.client.expire(key, ttlSeconds)) === 1;
     }
 
     async ttl(key: string): Promise<number> {
         return this.client.ttl(key);
+    }
+
+    async disconnect(): Promise<void> {
+        if (this.client.status === "end") return;
+        try {
+            await this.client.quit();
+        } catch {
+            this.client.disconnect();
+        }
     }
 }

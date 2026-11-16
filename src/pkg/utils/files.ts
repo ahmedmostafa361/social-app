@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { logger } from "../logger/logger.js";
 
-export const removeFile = async (filePath?: string): Promise<void> => {
+export const removeFile = async (filePath?: string | null): Promise<void> => {
     if (!filePath) return;
     try {
         await fs.unlink(filePath);
@@ -13,6 +13,6 @@ export const removeFile = async (filePath?: string): Promise<void> => {
     }
 };
 
-export const removeFiles = async (filePaths: (string | undefined)[] = []): Promise<void> => {
-    await Promise.all(filePaths.filter(Boolean).map((filePath) => removeFile(filePath)));
+export const removeFiles = async (filePaths: (string | null | undefined)[] = []): Promise<void> => {
+    await Promise.all(filePaths.map((filePath) => removeFile(filePath)));
 };

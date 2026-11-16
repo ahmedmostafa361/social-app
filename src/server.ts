@@ -1,20 +1,47 @@
-import { createApp } from "./app";
 import http from "node:http";
-import mongoose from "mongoose";
+import { createApp } from "./app.js";
+import { env } from "./lib/config/env.js";
+import { cacheProvider } from "./lib/cache/cache.js";
+import { connectDB, disconnectDB } from "./lib/db/connection.js";
+import { logger } from "./pkg/logger/logger.js";
 
-const app = createApp();
+const server = http.createServer(createApp());
 
-const server = http.createServer(app);
+let shuttingDown = false;
 
-server.listen(3000, () => {
-    console.log("Server is running on port 3000");
-});
+function shutdown(signal: string, exitCode = 0): void {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info(`${signal} received, shutting down`);
 
-async function shutdown(): Promise<void> {
-    await mongoose.disconnect();
-    server.close();
-    process.exit(0);
+    server.close(() => {
+        void Promise.allSettled([disconnectDB(), cacheProvider.disconnect()]).then(() => process.exit(exitCode));
+    });
+
+    setTimeout(() => process.exit(1), 10_000).unref();
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+async function start(): Promise<void> {
+    await Promise.all([connectDB(), cacheProvider.connect()]);
+    server.listen(env.port, () => {
+        logger.info(`Server running on port ${env.port}`, { env: env.nodeEnv });
+    });
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("unhandledRejection", (reason: unknown) => {
+    logger.error("Unhandled promise rejection", {
+        reason: reason instanceof Error ? reason.message : String(reason),
+        stack: reason instanceof Error ? reason.stack : undefined,
+    });
+});
+process.on("uncaughtException", (error: Error) => {
+    logger.error("Uncaught exception", { error: error.message, stack: error.stack });
+    shutdown("uncaughtException", 1);
+});
+
+start().catch((error: unknown) => {
+    logger.error("Failed to start server", { error: error instanceof Error ? error.message : String(error) });
+    process.exit(1);
+});

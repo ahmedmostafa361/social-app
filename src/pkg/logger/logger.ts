@@ -1,25 +1,18 @@
-export type LogLevel = "log" | "error" | "warn" | "debug" | "info";
+export type LogLevel = "error" | "warn" | "info" | "debug";
 
 class Logger {
-    private static instance: Logger;
-
-    constructor() {
-        if (!Logger.instance) {
-            Logger.instance = this;
-        }
-        return Logger.instance;
-    }
-
     log(level: LogLevel, message: string, metaData: Record<string, unknown> = {}): void {
-        const messageObj = {
+        const line = JSON.stringify({
             level,
             message,
             timestamp: new Date().toISOString(),
             ...metaData,
-        };
-        const line = JSON.stringify(messageObj);
+        });
+
         if (level === "error") {
             console.error(line);
+        } else if (level === "warn") {
+            console.warn(line);
         } else {
             console.log(line);
         }
@@ -33,12 +26,12 @@ class Logger {
         this.log("warn", message, metaData);
     }
 
-    debug(message: string, metaData: Record<string, unknown> = {}): void {
-        this.log("debug", message, metaData);
-    }
-
     info(message: string, metaData: Record<string, unknown> = {}): void {
         this.log("info", message, metaData);
+    }
+
+    debug(message: string, metaData: Record<string, unknown> = {}): void {
+        this.log("debug", message, metaData);
     }
 }
 

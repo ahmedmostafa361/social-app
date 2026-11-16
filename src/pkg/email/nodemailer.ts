@@ -1,5 +1,5 @@
 import { createTransport, type Transporter } from "nodemailer";
-import type{ MailProvider } from "./mail.interface.js";
+import type { MailProvider } from "./mail.interface.js";
 
 export interface INodemailerConfig {
     host?: string;
@@ -12,7 +12,7 @@ export interface INodemailerConfig {
 }
 
 export class NodemailerProvider implements MailProvider {
-    private client: Transporter;
+    private readonly client: Transporter;
     private readonly fromEmail: string;
     private readonly fromName: string;
 

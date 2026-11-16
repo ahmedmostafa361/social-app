@@ -1,35 +1,19 @@
 export type TimeUnit = "milliseconds" | "seconds" | "minutes" | "hours" | "days";
 
+const MS_PER_UNIT: Record<TimeUnit, number> = {
+    milliseconds: 1,
+    seconds: 1000,
+    minutes: 60 * 1000,
+    hours: 60 * 60 * 1000,
+    days: 24 * 60 * 60 * 1000,
+};
+
 export function toMs(time: number, unit: TimeUnit): number {
-    switch (unit) {
-        case "seconds":
-            return time * 1000;
-        case "minutes":
-            return time * 60 * 1000;
-        case "hours":
-            return time * 60 * 60 * 1000;
-        case "days":
-            return time * 24 * 60 * 60 * 1000;
-        case "milliseconds":
-        default:
-            return time;
-    }
+    return time * MS_PER_UNIT[unit];
 }
 
 export function toSeconds(time: number, unit: TimeUnit): number {
-    switch (unit) {
-        case "milliseconds":
-            return Math.floor(time / 1000);
-        case "minutes":
-            return time * 60;
-        case "hours":
-            return time * 60 * 60;
-        case "days":
-            return time * 24 * 60 * 60;
-        case "seconds":
-        default:
-            return time;
-    }
+    return Math.floor(toMs(time, unit) / 1000);
 }
 
 export function addTime(time: number, unit: TimeUnit, from: Date = new Date()): Date {

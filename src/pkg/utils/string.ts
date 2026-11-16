@@ -1,4 +1,4 @@
-export const escapeHtml = (value: string = ""): string => {
+export const escapeHtml = (value = ""): string => {
     return String(value)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -7,11 +7,11 @@ export const escapeHtml = (value: string = ""): string => {
         .replace(/'/g, "&#39;");
 };
 
-export const escapeRegex = (value: string = ""): string => {
+export const escapeRegex = (value = ""): string => {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
-export const maskEmail = (email: string = ""): string => {
+export const maskEmail = (email = ""): string => {
     const [local, domain] = String(email).split("@");
     if (!domain || !local) return email;
     const visible = local.slice(0, Math.min(2, local.length));
